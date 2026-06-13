@@ -89,11 +89,19 @@ class APIService {
     }
 
     func googleLoginMobile(payload: [String: String]) async throws -> [String: Any] {
-        let body = try JSONSerialization.data(withJSONObject: payload)
-        let request = try createRequest(endpoint: "/api/mobile/auth/google", method: "POST", body: body)
-        let (data, _) = try await URLSession.shared.data(for: request)
-        return try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
-    }
+            let body = try JSONSerialization.data(withJSONObject: payload)
+            let request = try createRequest(endpoint: "/api/mobile/auth/google", method: "POST", body: body)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            // --- NOU: LOGARE PENTRU DEBUGGING ---
+            if let httpResponse = response as? HTTPURLResponse, let responseString = String(data: data, encoding: .utf8) {
+                print("🚀 [LOG GOOGLE AUTH] Status Server: \(httpResponse.statusCode)")
+                print("📦 [LOG GOOGLE AUTH] Răspuns Brut: \(responseString)")
+            }
+            // ------------------------------------
+            
+            return try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+        }
 
     func updateLastAccess(requestData: UpdateAccessRequest) async throws {
         let body = try JSONEncoder().encode(requestData)
@@ -189,11 +197,14 @@ class APIService {
         return try JSONDecoder().decode(ClientProfileResponse.self, from: data)
     }
 
-    func updateClientProfile(profile: ClientProfileResponse) async throws {
-        let body = try JSONEncoder().encode(profile)
-        let request = try createRequest(endpoint: "/api/client/update-profile", method: "POST", body: body)
-        let _ = try await URLSession.shared.data(for: request)
-    }
+    func updateClientProfile(requestData: [String: Any]) async throws {
+            // Folosim JSONSerialization pentru a transforma dicționarul în date JSON
+            let body = try JSONSerialization.data(withJSONObject: requestData)
+            
+            // Creăm și trimitem request-ul (asigură-te că endpoint-ul este cel corect)
+            let request = try createRequest(endpoint: "/api/client/update-profile", method: "POST", body: body)
+            let _ = try await URLSession.shared.data(for: request)
+        }
 
     func getClientDashboard(email: String) async throws -> ClientDashboardResponse {
         let params = ["email": email]

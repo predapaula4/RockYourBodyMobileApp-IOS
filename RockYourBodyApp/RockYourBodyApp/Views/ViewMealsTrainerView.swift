@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct ViewMealsTrainerView: View {
-    @Environment(\.dismiss) var dismiss // Adăugat pentru a face butonul de Back să funcționeze
     let clientEmail: String
     let clientName: String
     
@@ -56,20 +55,7 @@ struct ViewMealsTrainerView: View {
             }
         }
         .navigationTitle("Meals: \(clientName)")
-        .navigationBarTitleDisplayMode(.inline)
-        // ASCUNDEM BUTONUL NATIV ȘI ÎL PUNEM PE CEL CUSTOM
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                    .foregroundColor(.orange)
-                }
-            }
-        }
+        .navigationBarTitleDisplayMode(.inline) // Acest modificator pune titlul pe același rând cu butonul nativ de Back
         .background(Color(hex: "#121212").ignoresSafeArea())
         .preferredColorScheme(.dark)
         .onAppear { loadMeals() }

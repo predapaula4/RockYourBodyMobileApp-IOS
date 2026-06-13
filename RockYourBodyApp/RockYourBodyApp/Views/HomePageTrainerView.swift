@@ -1,7 +1,11 @@
 import SwiftUI
 
 struct HomePageTrainerView: View {
+    // 1. ADĂUGAT: Variabila de environment pentru a ne putea întoarce la Login
+    @Environment(\.dismiss) private var dismiss
+    
     @State private var trainerEmail = UserDefaults.standard.string(forKey: "USER_EMAIL") ?? ""
+    @State private var trainerProfileImageBase64: String? = nil
     @State private var clients: [TrainerClientItem] = []
     @State private var searchText = ""
     @State private var isLoading = true
@@ -21,7 +25,6 @@ struct HomePageTrainerView: View {
     }
     
     var body: some View {
-        NavigationView {
             VStack(spacing: 0) {
                 // Bara de căutare modernă
                 HStack {
@@ -97,31 +100,7 @@ struct HomePageTrainerView: View {
                             }
                             
                         } label: {
-                            // Design Modern pentru Profilul Clientului (Avatar cu chenar)
-                            HStack(spacing: 12) {
-                                if let b64 = client.profileImageBase64, let data = Data(base64Encoded: b64), let img = UIImage(data: data) {
-                                    Image(uiImage: img)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 45, height: 45)
-                                        .clipShape(Circle())
-                                        .overlay(Circle().stroke(Color.orange.opacity(0.8), lineWidth: 1.5))
-                                } else {
-                                    Image(systemName: "person.crop.circle.fill")
-                                        .resizable()
-                                        .frame(width: 45, height: 45)
-                                        .foregroundColor(.gray.opacity(0.8))
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(cName).font(.headline).foregroundColor(.white)
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "phone.fill").font(.caption2).foregroundColor(.gray)
-                                        Text(client.phoneNumber).font(.subheadline).foregroundColor(.gray)
-                                    }
-                                }
-                            }
-                            .padding(.vertical, 4)
+                            ClientProfileHeaderView(client: client, cName: cName)
                         }
                         .listRowBackground(Color(hex: "#1E1E1E"))
                         .tint(.orange) // Culoarea săgeții de expandare
@@ -130,10 +109,38 @@ struct HomePageTrainerView: View {
                 }
             }
             .navigationTitle("Trainer Dashboard")
+            // 2. ADĂUGAT: Ascundem săgeata de Back
+            .navigationBarBackButtonHidden(true)
             .toolbar {
+                // 3. ADĂUGAT: Butonul de Logout plasat în partea stângă (Leading)
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: logoutUser) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Text("Logout")
+                        }
+                        .foregroundColor(.red)
+                    }
+                }
+                
+                // Poza de profil rămasă în partea dreaptă (Trailing)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink(destination: MyPersonalTrainerView(trainerEmail: trainerEmail)) {
-                        Image(systemName: "person.crop.circle").font(.title2).foregroundColor(.orange)
+                        if let b64 = trainerProfileImageBase64,
+                           let data = Data(base64Encoded: cleanBase64(b64)),
+                           let img = UIImage(data: data) {
+                            Image(uiImage: img)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 40, height: 40) // Ajustat puțin dimensiunea pentru a nu deforma bara
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(Color.orange, lineWidth: 1.5))
+                        } else {
+                            Image(systemName: "person.crop.circle")
+                                .resizable()
+                                .frame(width: 35, height: 35)
+                                .foregroundColor(.orange)
+                        }
                     }
                 }
             }
@@ -142,6 +149,7 @@ struct HomePageTrainerView: View {
             .onAppear {
                 loadClients()
                 loadBadges()
+                loadTrainerProfile()
                 triggerUpdateAccess()
             }
             .alert("Send Notification", isPresented: $showNotificationDialog) {
@@ -156,7 +164,7 @@ struct HomePageTrainerView: View {
                     isPresented: $showBadgeSheet
                 )
             }
-        }
+        
     }
     
     private func loadClients() {
@@ -190,9 +198,33 @@ struct HomePageTrainerView: View {
             notificationMessage = ""
         }
     }
+    
+    private func cleanBase64(_ base64String: String) -> String {
+        if base64String.contains(",") {
+            return String(base64String.split(separator: ",").last ?? "")
+        }
+        return base64String
+    }
+    
+    private func loadTrainerProfile() {
+        Task {
+            if let trainerData = try? await APIService.shared.getTrainerProfile(email: trainerEmail) {
+                self.trainerProfileImageBase64 = trainerData.profileImageBase64
+            }
+        }
+    }
+    
+    private func logoutUser() {
+        // Ștergem datele salvate în sesiune
+        UserDefaults.standard.removeObject(forKey: "USER_EMAIL")
+        // Dacă ai salvat și alte tokenuri, șterge-le și pe acelea aici
+        
+        // Ne întoarcem forțat la LoginView
+        dismiss()
+    }
 }
 
-// Sub-componentă pentru butoane stil iOS Settings (fără săgeată forțată, iOS pune săgeata nativ)
+// Sub-componentă pentru butoane stil iOS Settings
 struct ModernActionRow: View {
     let title: String
     let icon: String
@@ -277,5 +309,84 @@ struct BadgeSelectionView: View {
                 print("Eroare la acordarea insignei: \(error)")
             }
         }
+    }
+}
+
+struct ClientProfileHeaderView: View {
+    let client: TrainerClientItem
+    let cName: String
+    
+    // Stări locale pentru datele aduse din API
+    @State private var streak: Int = 0
+    @State private var fullPhone: String = ""
+    @State private var profileImage: String? = nil
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // 1. Afișarea pozei de profil
+            let b64 = profileImage ?? client.profileImageBase64
+            if let b64 = b64,
+               let data = Data(base64Encoded: cleanBase64(b64), options: .ignoreUnknownCharacters),
+               let img = UIImage(data: data) {
+                Image(uiImage: img)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 45, height: 45)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.orange.opacity(0.8), lineWidth: 1.5))
+            } else {
+                Image(systemName: "person.crop.circle.fill")
+                    .resizable()
+                    .frame(width: 45, height: 45)
+                    .foregroundColor(.gray.opacity(0.8))
+            }
+            
+            // 2. Afișarea Numelui, Streak-ului și Telefonului
+            VStack(alignment: .leading, spacing: 4) {
+                Text(cName).font(.headline).foregroundColor(.white)
+                
+                Text("🔥 Streak: \(streak) Days")
+                    .font(.caption)
+                    .bold()
+                    .foregroundColor(.orange)
+                
+                HStack(spacing: 4) {
+                    Image(systemName: "phone.fill").font(.caption2).foregroundColor(.gray)
+                    Text(fullPhone).font(.subheadline).foregroundColor(.gray)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+        .onAppear {
+            self.fullPhone = client.phoneNumber
+            loadExtraClientData()
+        }
+    }
+    
+    private func loadExtraClientData() {
+        Task {
+            async let profileReq = try? APIService.shared.getClientProfile(email: client.email)
+            async let dashboardReq = try? APIService.shared.getClientDashboard(email: client.email)
+            
+            let profile = await profileReq
+            let dashboard = await dashboardReq
+            
+            if let p = profile {
+                self.fullPhone = p.fullPhoneNumber ?? client.phoneNumber
+            }
+            
+            if let d = dashboard {
+                self.streak = d.streak
+                self.profileImage = d.profileImage
+            }
+        }
+    }
+    
+    private func cleanBase64(_ base64String: String) -> String {
+        var cleaned = base64String
+        if cleaned.contains(",") {
+            cleaned = String(cleaned.split(separator: ",").last ?? "")
+        }
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

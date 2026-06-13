@@ -21,158 +21,174 @@ struct WearableSyncView: View {
     var boneMass: Float { leanMass * 0.04 }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                
-                // Card Pași & Calorii
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("\(hkManager.todaySteps) steps").font(.system(size: 32, weight: .bold)).foregroundColor(Color(hex: "#50F4B5"))
-                    
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("Total burned (BMR+Active)").font(.caption).foregroundColor(.gray)
-                            Text("\(Int(hkManager.totalCalories)) kcal").font(.headline).foregroundColor(Color(hex: "#FF5252"))
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        VStack(alignment: .leading) {
-                            Text("Active Calories").font(.caption).foregroundColor(.gray)
-                            Text("\(Int(hkManager.activeCalories)) kcal").font(.headline).foregroundColor(Color(hex: "#F09819"))
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    
-                    ProgressView(value: min(Double(hkManager.todaySteps), 6000), total: 6000)
-                        .tint(Color(hex: "#50F4A1"))
-                }
-                .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
-                
-                // Card Smart Scale (Greutate, Grăsime)
-                VStack(spacing: 16) {
-                    HStack {
-                        ScaleMetricView(title: "Weight", value: hkManager.weight != nil ? String(format: "%.1f kg", hkManager.weight!) : "-- kg")
-                        ScaleMetricView(title: "Body Fat", value: hkManager.bodyFat != nil ? String(format: "%.1f %%", hkManager.bodyFat!) : "-- %")
-                    }
-                    HStack {
-                        ScaleMetricView(title: "Lean Mass", value: hkManager.weight != nil ? String(format: "%.1f kg", leanMass) : "-- kg")
-                        ScaleMetricView(title: "Bone Mass", value: hkManager.weight != nil ? String(format: "%.1f kg", boneMass) : "-- kg")
-                    }
-                }
-                .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
-                
-                // NOU: Card Vitals (Oxigen, VO2 Max, Tensiune, Resting HR)
-                VStack(spacing: 16) {
-                    HStack {
-                        ScaleMetricView(title: "Blood Oxygen", value: hkManager.oxygenSaturation != nil ? String(format: "%.1f %%", hkManager.oxygenSaturation!) : "-- %")
-                        ScaleMetricView(title: "VO2 Max", value: hkManager.vo2Max != nil ? String(format: "%.1f", hkManager.vo2Max!) : "--")
-                    }
-                    HStack {
-                        ScaleMetricView(title: "Resting HR", value: hkManager.restingHeartRate > 0 ? "\(Int(hkManager.restingHeartRate)) bpm" : "-- bpm")
-                        ScaleMetricView(title: "Blood Pressure", value: (hkManager.systolicBP != nil && hkManager.diastolicBP != nil) ? "\(Int(hkManager.systolicBP!))/\(Int(hkManager.diastolicBP!))" : "--/--")
-                    }
-                }
-                .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
-
-                // Grid Somn / Heart Rate
-                HStack(spacing: 8) {
-                    VStack(alignment: .leading) {
-                        Text("Sleep").font(.caption).foregroundColor(.gray)
-                        Text("\(hkManager.sleepMinutes / 60)h \(hkManager.sleepMinutes % 60)m").font(.title3).bold().foregroundColor(Color(hex: "#8C66FF"))
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading).padding().background(Color(hex: "#1E1E1E")).cornerRadius(20)
-                    
-                    VStack(alignment: .leading) {
-                        Text("Avg Heart Rate").font(.caption).foregroundColor(.gray)
-                        Text(hkManager.avgHeartRate > 0 ? "\(Int(hkManager.avgHeartRate)) bpm" : "-- bpm").font(.title3).bold().foregroundColor(Color(hex: "#FF5252"))
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading).padding().background(Color(hex: "#1E1E1E")).cornerRadius(20)
-                }.padding(.horizontal)
-                
-                // Card Performance
-                VStack(spacing: 16) {
-                    HStack {
-                        PerformanceMetricView(title: "Distance", value: String(format: "%.2f km", hkManager.distanceMeters / 1000.0))
-                        PerformanceMetricView(title: "Floors", value: "\(Int(hkManager.floorsClimbed))")
-                    }
-                    HStack {
-                        PerformanceMetricView(title: "Active Mins", value: "\(hkManager.activityIntensityMinutes) min")
-                        PerformanceMetricView(title: "Water", value: "\(hkManager.waterMl) ml")
-                    }
-                }
-                .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
-                
-                // NOU: Card Advanced Performance (Viteză, Cadență, Elevație)
-                                VStack(spacing: 16) {
-                                    HStack {
-                                        PerformanceMetricView(title: "Avg Speed", value: hkManager.avgSpeed != nil ? String(format: "%.1f m/s", hkManager.avgSpeed!) : "-- m/s")
-                                        PerformanceMetricView(title: "Step Cadence", value: hkManager.avgCadence != nil ? "\(Int(hkManager.avgCadence!)) rpm" : "-- rpm")
-                                    }
-                                    HStack {
-                                        PerformanceMetricView(title: "Elevation", value: "-- m") // HealthKit măsoară asta prin Floors, dar poți lăsa placeholder dacă ai nevoie în Sync
-                                        PerformanceMetricView(title: "Exercises", value: "\(hkManager.exerciseSessionsCount) sessions")
-                                    }
-                                }
-                                .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
-                                
-                                // NOU: Card Cycling & Power
-                                VStack(spacing: 16) {
-                                    HStack {
-                                        PerformanceMetricView(title: "Power", value: hkManager.powerWatts != nil ? "\(Int(hkManager.powerWatts!)) W" : "-- W")
-                                        PerformanceMetricView(title: "Cycle Cadence", value: hkManager.avgCadence != nil ? "\(Int(hkManager.avgCadence!)) rpm" : "-- rpm") // iOS folosește un singur tip de cadență generală pe ceas
-                                    }
-                                }
-                                .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
-                
-                // ---- BUTOANE SYNC & PDF EXPORT ----
-                VStack(spacing: 12) {
-                    if let msg = syncMessage {
-                        Text(msg).font(.subheadline).foregroundColor(msg.contains("failed") ? .red : .green)
-                    }
-                    
-                    Button(action: performSync) {
-                        if isSyncing {
-                            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .frame(maxWidth: .infinity).padding().background(Color.orange).cornerRadius(16)
-                        } else {
-                            Text("Sync Extracted Data to Server")
-                                .font(.headline).foregroundColor(.white).frame(maxWidth: .infinity).padding().background(Color.orange).cornerRadius(16)
+        ZStack {
+           Color(hex: "#121212").ignoresSafeArea()
+            VStack(spacing: 0) {
+                // --- HEADER CUSTOM (Așa rezolvăm săritul ecranului) ---
+                HStack {
+                    Button(action: { dismiss() }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
                         }
-                    }.disabled(isSyncing)
-                    
-                    if let expMsg = exportMessage {
-                        Text(expMsg).font(.subheadline).foregroundColor(expMsg.contains("Error") ? .red : .green)
+                        .foregroundColor(.cyan)
                     }
-                    
-                    Button(action: { showExportOptions = true }) {
-                        if isExporting {
-                            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .frame(maxWidth: .infinity).padding().background(Color.red).cornerRadius(16)
-                        } else {
-                            HStack {
-                                Image(systemName: "doc.text.fill")
-                                Text("Generate & Send PDF Report")
-                            }
-                            .font(.headline).foregroundColor(.white).frame(maxWidth: .infinity).padding().background(Color.red).cornerRadius(16)
-                        }
-                    }.disabled(isExporting)
-                }
-                .padding()
-            }
-            .padding(.top, 16)
-        }
-        .navigationTitle("Wearable Activity")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
+                    Spacer()
+                    Text("Wearable Activity")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Spacer()
+                    // Placeholder invizibil pentru a centra perfect titlul
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
                         Text("Back")
                     }
-                    .foregroundColor(.cyan)
+                    .opacity(0)
+                }
+                .padding()
+                // --- CONȚINUTUL PAGINII ---
+                ScrollView {
+                    VStack(spacing: 16) {
+                        
+                        // Card Pași & Calorii
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("\(hkManager.todaySteps) steps").font(.system(size: 32, weight: .bold)).foregroundColor(Color(hex: "#50F4B5"))
+                            
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text("Total burned (BMR+Active)").font(.caption).foregroundColor(.gray)
+                                    Text("\(Int(hkManager.totalCalories)) kcal").font(.headline).foregroundColor(Color(hex: "#FF5252"))
+                                }.frame(maxWidth: .infinity, alignment: .leading)
+                                
+                                VStack(alignment: .leading) {
+                                    Text("Active Calories").font(.caption).foregroundColor(.gray)
+                                    Text("\(Int(hkManager.activeCalories)) kcal").font(.headline).foregroundColor(Color(hex: "#F09819"))
+                                }.frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            
+                            ProgressView(value: min(Double(hkManager.todaySteps), 6000), total: 6000)
+                                .tint(Color(hex: "#50F4A1"))
+                        }
+                        .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
+                        
+                        // Card Smart Scale (Greutate, Grăsime)
+                        VStack(spacing: 16) {
+                            HStack {
+                                ScaleMetricView(title: "Weight", value: hkManager.weight != nil ? String(format: "%.1f kg", hkManager.weight!) : "-- kg")
+                                ScaleMetricView(title: "Body Fat", value: hkManager.bodyFat != nil ? String(format: "%.1f %%", hkManager.bodyFat!) : "-- %")
+                            }
+                            HStack {
+                                ScaleMetricView(title: "Lean Mass", value: hkManager.weight != nil ? String(format: "%.1f kg", leanMass) : "-- kg")
+                                ScaleMetricView(title: "Bone Mass", value: hkManager.weight != nil ? String(format: "%.1f kg", boneMass) : "-- kg")
+                            }
+                        }
+                        .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
+                        
+                        // Card Vitals
+                        VStack(spacing: 16) {
+                            HStack {
+                                ScaleMetricView(title: "Blood Oxygen", value: hkManager.oxygenSaturation != nil ? String(format: "%.1f %%", hkManager.oxygenSaturation!) : "-- %")
+                                ScaleMetricView(title: "VO2 Max", value: hkManager.vo2Max != nil ? String(format: "%.1f", hkManager.vo2Max!) : "--")
+                            }
+                            HStack {
+                                ScaleMetricView(title: "Resting HR", value: hkManager.restingHeartRate > 0 ? "\(Int(hkManager.restingHeartRate)) bpm" : "-- bpm")
+                                ScaleMetricView(title: "Blood Pressure", value: (hkManager.systolicBP != nil && hkManager.diastolicBP != nil) ? "\(Int(hkManager.systolicBP!))/\(Int(hkManager.diastolicBP!))" : "--/--")
+                            }
+                        }
+                        .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
+                        
+                        // Grid Somn / Heart Rate
+                        HStack(spacing: 8) {
+                            VStack(alignment: .leading) {
+                                Text("Sleep").font(.caption).foregroundColor(.gray)
+                                Text("\(hkManager.sleepMinutes / 60)h \(hkManager.sleepMinutes % 60)m").font(.title3).bold().foregroundColor(Color(hex: "#8C66FF"))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading).padding().background(Color(hex: "#1E1E1E")).cornerRadius(20)
+                            
+                            VStack(alignment: .leading) {
+                                Text("Avg Heart Rate").font(.caption).foregroundColor(.gray)
+                                Text(hkManager.avgHeartRate > 0 ? "\(Int(hkManager.avgHeartRate)) bpm" : "-- bpm").font(.title3).bold().foregroundColor(Color(hex: "#FF5252"))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading).padding().background(Color(hex: "#1E1E1E")).cornerRadius(20)
+                        }.padding(.horizontal)
+                        
+                        // Card Performance
+                        VStack(spacing: 16) {
+                            HStack {
+                                PerformanceMetricView(title: "Distance", value: String(format: "%.2f km", hkManager.distanceMeters / 1000.0))
+                                PerformanceMetricView(title: "Floors", value: "\(Int(hkManager.floorsClimbed))")
+                            }
+                            HStack {
+                                PerformanceMetricView(title: "Active Mins", value: "\(hkManager.activityIntensityMinutes) min")
+                                PerformanceMetricView(title: "Water", value: "\(hkManager.waterMl) ml")
+                            }
+                        }
+                        .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
+                        
+                        // Card Advanced Performance
+                        VStack(spacing: 16) {
+                            HStack {
+                                PerformanceMetricView(title: "Avg Speed", value: hkManager.avgSpeed != nil ? String(format: "%.1f m/s", hkManager.avgSpeed!) : "-- m/s")
+                                PerformanceMetricView(title: "Step Cadence", value: hkManager.avgCadence != nil ? "\(Int(hkManager.avgCadence!)) rpm" : "-- rpm")
+                            }
+                            HStack {
+                                PerformanceMetricView(title: "Elevation", value: "-- m")
+                                PerformanceMetricView(title: "Exercises", value: "\(hkManager.exerciseSessionsCount) sessions")
+                            }
+                        }
+                        .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
+                        
+                        // Card Cycling & Power
+                        VStack(spacing: 16) {
+                            HStack {
+                                PerformanceMetricView(title: "Power", value: hkManager.powerWatts != nil ? "\(Int(hkManager.powerWatts!)) W" : "-- W")
+                                PerformanceMetricView(title: "Cycle Cadence", value: hkManager.avgCadence != nil ? "\(Int(hkManager.avgCadence!)) rpm" : "-- rpm")
+                            }
+                        }
+                        .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
+                        
+                        // ---- BUTOANE SYNC & PDF EXPORT ----
+                        VStack(spacing: 12) {
+                            if let msg = syncMessage {
+                                Text(msg).font(.subheadline).foregroundColor(msg.contains("failed") ? .red : .green)
+                            }
+                            
+                            Button(action: performSync) {
+                                if isSyncing {
+                                    ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .frame(maxWidth: .infinity).padding().background(Color.orange).cornerRadius(16)
+                                } else {
+                                    Text("Sync Extracted Data to Server")
+                                        .font(.headline).foregroundColor(.white).frame(maxWidth: .infinity).padding().background(Color.orange).cornerRadius(16)
+                                }
+                            }.disabled(isSyncing)
+                            
+                            if let expMsg = exportMessage {
+                                Text(expMsg).font(.subheadline).foregroundColor(expMsg.contains("Error") ? .red : .green)
+                            }
+                            
+                            Button(action: { showExportOptions = true }) {
+                                if isExporting {
+                                    ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .frame(maxWidth: .infinity).padding().background(Color.red).cornerRadius(16)
+                                } else {
+                                    HStack {
+                                        Image(systemName: "doc.text.fill")
+                                        Text("Generate & Send PDF Report")
+                                    }
+                                    .font(.headline).foregroundColor(.white).frame(maxWidth: .infinity).padding().background(Color.red).cornerRadius(16)
+                                }
+                            }.disabled(isExporting)
+                        }
+                        .padding()
+                    }
+                    .padding(.top, 16)
                 }
             }
-        }
-        .background(Color(hex: "#121212").ignoresSafeArea())
+        } // Aici se închide VStack-ul principal
+        .navigationBarTitleDisplayMode(.inline) // FIX: Oprește "strângerea"
+                .navigationBarHidden(true)
+                .toolbar(.hidden, for: .navigationBar) // Oprim complet iOS-ul din a anima vreo bară nativă
         .onAppear {
             hkManager.requestAuthorization { authorized in
                 if authorized { hkManager.fetchAllData() }

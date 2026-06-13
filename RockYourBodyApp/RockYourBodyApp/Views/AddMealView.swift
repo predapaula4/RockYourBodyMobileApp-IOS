@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AddMealView: View {
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) var dismiss // Lăsat aici pentru a putea închide pagina după salvare
     
     let clientEmail: String
     let clientName: String
@@ -73,19 +73,6 @@ struct AddMealView: View {
         }
         .navigationTitle(isEditMode ? "Edit Meal" : "Add Meal")
         .navigationBarTitleDisplayMode(.inline)
-        // FORȚĂM ASCUNDEREA BUTONULUI NATIV AICI
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                    .foregroundColor(.orange)
-                }
-            }
-        }
         .preferredColorScheme(.dark)
         .onAppear { setupInitialFields() }
     }
@@ -158,7 +145,7 @@ struct AddMealView: View {
                     try await APIService.shared.submitMeal(requestData: request)
                 }
                 isLoading = false
-                dismiss()
+                dismiss() // Aici e folosită variabila dismiss
             } catch {
                 isLoading = false
                 errorMessage = "Failed to save meal data."

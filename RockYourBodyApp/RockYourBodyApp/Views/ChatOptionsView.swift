@@ -8,15 +8,6 @@ struct ChatOptionsView: View {
     
     var body: some View {
         VStack(spacing: 24) {
-            HStack {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "arrow.left").foregroundColor(.white).font(.title3)
-                }
-                Spacer()
-                Text("Contact Trainer").font(.headline).foregroundColor(.white)
-                Spacer()
-            }
-            .padding(.horizontal)
             
             if isLoading {
                 ProgressView().padding(.top, 50)
@@ -24,12 +15,20 @@ struct ChatOptionsView: View {
                 VStack(spacing: 16) {
                     // Buton In-App Chat
                     NavigationLink(destination: ChatView(myEmail: clientEmail, targetEmail: trainerEmail, isTrainer: false)) {
-                        ChatOptionCard(title: "In-App Chat", subtitle: "Talk securely inside RockYourBody", icon: "message.fill", color: .cyan)
+                        ChatOptionCard(title: "In-App Chat",
+                                       subtitle: "Talk securely inside RockYourBody",
+                                       icon: "message.fill",
+                                       color: .cyan,
+                                       isSystemIcon: true)
                     }
                     
-                    // Buton WhatsApp
+                    // Buton WhatsApp cu sigla custom (ai nevoie de imaginea whatsapp_logo in Assets)
                     Button(action: openWhatsApp) {
-                        ChatOptionCard(title: "WhatsApp", subtitle: "Fast messaging via WhatsApp", icon: "phone.bubble.left.fill", color: .green)
+                        ChatOptionCard(title: "WhatsApp",
+                                       subtitle: "Fast messaging via WhatsApp",
+                                       icon: "whatsapp_logo", // Numele pozei din Assets
+                                       color: .green,
+                                       isSystemIcon: false)
                     }
                 }
                 .padding()
@@ -37,7 +36,9 @@ struct ChatOptionsView: View {
             Spacer()
         }
         .background(Color(hex: "#121212").ignoresSafeArea())
-        .navigationBarHidden(true)
+        // ADĂUGĂM BARA NATIVĂ AICI:
+        .navigationTitle("Contact Trainer")
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear { loadTrainerEmail() }
     }
     
@@ -55,21 +56,15 @@ struct ChatOptionsView: View {
     private func openWhatsApp() {
         Task {
             do {
-                // VERIFICĂ AICI: Ai pus 'try await' în fața metodei?
                 let trainerProfile = try await APIService.shared.getTrainerProfile(email: trainerEmail)
-                
                 let phone = trainerProfile.fullPhoneNumber ?? trainerProfile.phoneNumber ?? ""
-                
                 guard !phone.isEmpty else { return }
-                
                 let cleanPhone = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
                 
-                if let url = URL(string: "https://wa.me/\(cleanPhone)"),
-                   UIApplication.shared.canOpenURL(url) {
-                    // Aici nu trebuie 'await', este apel sincron
-                    await UIApplication.shared.open(url)
-                    // Notă: În versiunile noi de iOS, open(url) poate necesita await în anumite contexte.
-                    // Dacă îți dă eroare, folosește await.
+                if let url = URL(string: "https://wa.me/\(cleanPhone)") {
+                    if await UIApplication.shared.canOpenURL(url) {
+                        await UIApplication.shared.open(url)
+                    }
                 }
             } catch {
                 print("Eroare deschidere whatsapp: \(error)")
@@ -78,11 +73,29 @@ struct ChatOptionsView: View {
     }
 }
 
+// CARD MODIFICAT PENTRU A SUPORTA ICOANE SYSTEM SAU IMAGINI CUSTOM
 struct ChatOptionCard: View {
-    let title: String; let subtitle: String; let icon: String; let color: Color
+    let title: String
+    let subtitle: String
+    let icon: String
+    let color: Color
+    let isSystemIcon: Bool
+    
     var body: some View {
         HStack(spacing: 16) {
-            Image(systemName: icon).font(.title).foregroundColor(color).frame(width: 40)
+            if isSystemIcon {
+                Image(systemName: icon)
+                    .font(.title)
+                    .foregroundColor(color)
+                    .frame(width: 40)
+            } else {
+                // Afișează imaginea "whatsapp_logo" din Assets
+                Image(icon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 35, height: 35)
+            }
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.headline).foregroundColor(.white)
                 Text(subtitle).font(.caption).foregroundColor(.gray)

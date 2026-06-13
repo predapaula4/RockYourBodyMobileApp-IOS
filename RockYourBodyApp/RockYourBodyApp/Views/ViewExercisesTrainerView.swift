@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct ViewExercisesTrainerView: View {
-    @Environment(\.dismiss) var dismiss // Pentru butonul de Back custom
     let clientEmail: String
     let clientName: String
     
@@ -55,19 +54,6 @@ struct ViewExercisesTrainerView: View {
         }
         .navigationTitle("Workouts: \(clientName)")
         .navigationBarTitleDisplayMode(.inline)
-        // Ascundem butonul nativ și punem design-ul nostru curat
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                    .foregroundColor(.orange)
-                }
-            }
-        }
         .background(Color(hex: "#121212").ignoresSafeArea())
         .preferredColorScheme(.dark)
         .onAppear { loadExercises() }

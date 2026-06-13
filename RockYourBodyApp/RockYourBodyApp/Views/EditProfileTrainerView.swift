@@ -94,4 +94,5 @@ struct EditProfileTrainerView: View {
             dismiss()
         }
     }
+    
 }

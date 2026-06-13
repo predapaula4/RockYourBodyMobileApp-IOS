@@ -1,60 +1,76 @@
 import SwiftUI
 
+// Adăugăm un "wrapper" pentru a face rețeta identificabilă pentru Sheet
+struct IdentifiableMealIdea: Identifiable {
+    let id = UUID()
+    let idea: MealIdeas
+}
+
 struct MealIdeasView: View {
-    @Environment(\.dismiss) var dismiss
     @State private var ideas: [MealIdeas] = []
     @State private var isLoading = true
     
+    // Aici ținem minte ce rețetă a fost selectată pentru a deschide Sheet-ul
+    @State private var selectedIdea: IdentifiableMealIdea? = nil
+    
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "arrow.left").foregroundColor(.white).font(.title3)
-                }
-                Spacer()
-                Text("Healthy Recipes").font(.headline).foregroundColor(.white)
-                Spacer()
-            }
-            .padding()
-            .background(Color(hex: "#1E1E1E"))
-            
-            ScrollView {
-                if isLoading {
-                    ProgressView().padding(.top, 50)
-                } else if ideas.isEmpty {
-                    Text("No meal ideas available.").foregroundColor(.gray).padding(.top, 50)
-                } else {
-                    LazyVStack(spacing: 16) {
-                        ForEach(ideas, id: \.name) { idea in
-                            MealIdeaItemView(idea: idea)
+        ScrollView {
+            if isLoading {
+                ProgressView().padding(.top, 50)
+            } else if ideas.isEmpty {
+                Text("No meal ideas available.")
+                    .foregroundColor(.gray)
+                    .padding(.top, 50)
+            } else {
+                LazyVStack(spacing: 16) {
+                    ForEach(ideas, id: \.name) { idea in
+                        // Transmitem o acțiune cardului pentru a seta selectedIdea
+                        MealIdeaItemView(idea: idea) {
+                            selectedIdea = IdentifiableMealIdea(idea: idea)
                         }
                     }
-                    .padding()
                 }
+                .padding()
             }
         }
         .background(Color(hex: "#121212").ignoresSafeArea())
-        .navigationBarHidden(true)
+        .navigationTitle("Healthy Recipes")
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear { loadIdeas() }
+        // Sheet-ul este atașat aici, la nivelul întregului ecran
+        .sheet(item: $selectedIdea) { item in
+            MealIdeaDetailSheet(idea: item.idea)
+        }
     }
     
     private func loadIdeas() {
         Task {
             do {
-                ideas = try await APIService.shared.getMealIdeas()
-                isLoading = false
-            } catch { isLoading = false }
+                // Descărcăm datele
+                let fetchedIdeas = try await APIService.shared.getMealIdeas()
+                
+                // Actualizarea pe Main Thread (foarte important)
+                await MainActor.run {
+                    ideas = fetchedIdeas
+                    isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                }
+            }
         }
     }
 }
 
-// Design-ul specific pentru elementul listei
+// Design-ul cardului pentru elementul din listă
 struct MealIdeaItemView: View {
     let idea: MealIdeas
-    @State private var showDetails = false
+    let onSeeDetailsTapped: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // Imaginea principală
             AsyncImage(url: URL(string: idea.imageUrlMeal)) { img in
                 img.resizable().scaledToFill()
             } placeholder: {
@@ -64,28 +80,102 @@ struct MealIdeaItemView: View {
             .clipped()
             
             VStack(alignment: .leading, spacing: 8) {
-                Text(idea.name).font(.headline).foregroundColor(.white)
+                Text(idea.name)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                
                 Text("\(Int(idea.calories)) kcal | P: \(Int(idea.protein))g | C: \(Int(idea.carbohydrate))g")
-                    .font(.subheadline).foregroundColor(.orange)
+                    .font(.subheadline)
+                    .foregroundColor(.orange)
                 
-                Button(action: { withAnimation { showDetails.toggle() } }) {
-                    Text(showDetails ? "Hide Details" : "See Details")
-                        .font(.caption).bold().padding(.vertical, 6).padding(.horizontal, 12)
-                        .background(Color.cyan).foregroundColor(.black).cornerRadius(6)
-                }
-                
-                if showDetails {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Ingredients:").bold().foregroundColor(.white).padding(.top, 4)
-                        Text(idea.ingredients).font(.caption).foregroundColor(.gray)
-                        Text("Instructions:").bold().foregroundColor(.white).padding(.top, 4)
-                        Text(idea.preparationInstructions).font(.caption).foregroundColor(.gray)
+                // REPARAȚIA PRINCIPALĂ:
+                // Am înlocuit `Button` cu `Text` + `.onTapGesture`
+                // Acest lucru previne conflictul cu ScrollView-ul din părinte.
+                Text("See Details")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color.cyan)
+                    .foregroundColor(.black)
+                    .cornerRadius(8)
+                    .contentShape(Rectangle()) // Face toată zona albastră "solidă" pentru apăsare
+                    .onTapGesture {
+                        onSeeDetailsTapped()
                     }
-                }
+                    .padding(.top, 4)
             }
             .padding()
         }
         .background(Color(hex: "#1E1E1E"))
         .cornerRadius(12)
+        // REPARAȚIE EXTRA:
+        // Face întregul card (inclusiv imaginea) capabil să declanșeze deschiderea Sheet-ului
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onSeeDetailsTapped()
+        }
+    }
+}
+
+// Noua fereastră (Sheet) cu detaliile complete
+struct MealIdeaDetailSheet: View {
+    @Environment(\.dismiss) var dismiss
+    let idea: MealIdeas
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Imagine mare
+                    AsyncImage(url: URL(string: idea.imageUrlMeal)) { img in
+                        img.resizable().scaledToFit()
+                    } placeholder: {
+                        Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 250)
+                    }
+                    .cornerRadius(12)
+                    
+                    Text(idea.name)
+                        .font(.title)
+                        .bold()
+                        .foregroundColor(.white)
+                    
+                    Text("\(Int(idea.calories)) kcal | Protein: \(Int(idea.protein))g | Carbs: \(Int(idea.carbohydrate))g")
+                        .font(.headline)
+                        .foregroundColor(.orange)
+                    
+                    Divider().background(Color.gray)
+                    
+                    // Ingrediente
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Ingredients")
+                            .font(.title3)
+                            .bold()
+                            .foregroundColor(.cyan)
+                        Text(idea.ingredients)
+                            .foregroundColor(.gray)
+                    }
+                    
+                    Divider().background(Color.gray)
+                    
+                    // Instrucțiuni
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Instructions")
+                            .font(.title3)
+                            .bold()
+                            .foregroundColor(.cyan)
+                        Text(idea.preparationInstructions)
+                            .foregroundColor(.gray)
+                    }
+                }
+                .padding()
+            }
+            .background(Color(hex: "#121212").ignoresSafeArea())
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Close") { dismiss() }.foregroundColor(.cyan)
+                }
+            }
+        }
     }
 }

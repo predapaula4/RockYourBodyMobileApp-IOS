@@ -9,8 +9,6 @@ struct MeasureChartPoint: Identifiable {
 }
 
 struct ViewBodyMeasuresTrainerView: View {
-    @Environment(\.dismiss) var dismiss
-    
     let clientEmail: String
     let clientName: String
     
@@ -75,19 +73,24 @@ struct ViewBodyMeasuresTrainerView: View {
             } else if let data = chartData {
                 
                 // 1. ZONA GRAFICULUI (CHART)
-                VStack {
-                    Picker("Select Metric", selection: $selectedMetric) {
-                        ForEach(availableMetrics, id: \.self) { metric in
-                            Text(metric).tag(metric)
-                        }
+                VStack(alignment: .leading) {
+                    HStack {
+                         Text("Measure Evolution (cm)").font(.headline).foregroundColor(.white)
+                         Spacer()
+                         Picker("Select Metric", selection: $selectedMetric) {
+                             ForEach(availableMetrics, id: \.self) { metric in
+                                 Text(metric).tag(metric)
+                             }
+                         }
+                         .pickerStyle(.menu)
+                         .tint(.orange)
                     }
-                    .pickerStyle(.menu)
-                    .tint(.orange)
-                    .padding(.vertical, 8)
-                    
+                    .padding(.bottom, 8)
+                   
                     if chartPoints.isEmpty {
                         Text("No data available for this metric").foregroundColor(.gray)
-                            .frame(height: 200)
+                            .frame(height: 220)
+                            .frame(maxWidth: .infinity)
                     } else {
                         Chart(chartPoints) { point in
                             // Linia continuă curbată
@@ -95,22 +98,28 @@ struct ViewBodyMeasuresTrainerView: View {
                                 x: .value("Date", point.date),
                                 y: .value("Value (cm)", point.value)
                             )
-                            .interpolationMethod(.catmullRom) // Face linia curbată similar cu CUBIC_BEZIER din Android
-                            .foregroundStyle(Color.orange)
+                            .foregroundStyle(Color.cyan)
                             .lineStyle(StrokeStyle(lineWidth: 3))
+                            .interpolationMethod(.catmullRom) // Face linia curbată
                             
-                            // Punctele de pe grafic
+                            // Punctele cu TEXTUL DEASUPRA (cm)
                             PointMark(
                                 x: .value("Date", point.date),
                                 y: .value("Value (cm)", point.value)
                             )
                             .foregroundStyle(Color.orange)
+                            .symbolSize(50)
+                            .annotation(position: .top, spacing: 4) {
+                                Text(String(format: "%.1f cm", point.value))
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
                         }
+                        .chartYScale(domain: .automatic(includesZero: false))
                         .frame(height: 220)
-                        .padding(.horizontal)
                     }
                 }
-                .padding(.bottom, 10)
+                .padding()
                 .background(Color(hex: "#1E1E1E"))
                 
                 Divider().background(Color.gray.opacity(0.5))
@@ -149,19 +158,6 @@ struct ViewBodyMeasuresTrainerView: View {
         }
         .navigationTitle("Measures: \(clientName)")
         .navigationBarTitleDisplayMode(.inline)
-        // Ascundem butonul nativ și punem design-ul nostru
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                    .foregroundColor(.orange)
-                }
-            }
-        }
         .background(Color(hex: "#121212").ignoresSafeArea())
         .preferredColorScheme(.dark)
         .onAppear { loadMeasures() }

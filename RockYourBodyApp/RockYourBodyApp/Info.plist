@@ -2,19 +2,18 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <key>NSAllowsArbitraryLoads</key>
-        <true/>
-    </dict>
-
-    <key>NSHealthShareUsageDescription</key>
-    <string>We need access to your health data to sync steps, calories, and vitals with your trainer.</string>
-
-    <key>NSHealthUpdateUsageDescription</key>
-    <string>We need access to write or update fitness and weight metrics.</string>
-
-    <key>NSMotionUsageDescription</key>
-    <string>We need access to motion sensors to accurately track your physical activity and cadence.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.1065768828965-h507f8ergvmr1397b5cpg1l9pavqdrld</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>1065768828965-h507f8ergvmr1397b5cpg1l9pavqdrld.apps.googleusercontent.com</string>
 </dict>
 </plist>

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AddExerciseView: View {
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) var dismiss // Lăsat aici pentru a putea închide pagina după salvare
     
     let clientEmail: String
     let clientName: String
@@ -21,7 +21,6 @@ struct AddExerciseView: View {
     let bodyParts = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Abs", "Cardio"]
     
     var body: some View {
-        // AM ȘTERS NavigationView-ul
         Form {
             Section(header: Text("Client Info").foregroundColor(.gray)) {
                 Text("\(isEditMode ? "Edit" : "Add") Exercise for: \(clientName)")
@@ -66,19 +65,6 @@ struct AddExerciseView: View {
         }
         .navigationTitle(isEditMode ? "Edit Exercise" : "Add Exercise")
         .navigationBarTitleDisplayMode(.inline)
-        // Ascundem butonul nativ și punem unul curat
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                    .foregroundColor(.orange)
-                }
-            }
-        }
         .preferredColorScheme(.dark)
         .onAppear { setupInitialFields() }
     }
@@ -141,7 +127,7 @@ struct AddExerciseView: View {
                     try await APIService.shared.submitExercise(requestData: request)
                 }
                 isLoading = false
-                dismiss()
+                dismiss() // Aici e folosită variabila dismiss
             } catch {
                 isLoading = false
                 errorMessage = "Failed to synchronize workout to cloud database."

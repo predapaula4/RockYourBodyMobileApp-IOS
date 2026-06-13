@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3820A1DD2FDDA9EF0092C6AF /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3820A1DC2FDDA9EF0092C6AF /* FirebaseCore */; };
+		3820A1E02FDDAB450092C6AF /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3820A1DF2FDDAB450092C6AF /* GoogleSignIn */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		3853659A2FDBE1FC0029C113 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -77,6 +82,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3820A1DD2FDDA9EF0092C6AF /* FirebaseCore in Frameworks */,
+				3820A1E02FDDAB450092C6AF /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,12 +104,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3820A1DE2FDDAB450092C6AF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		3853657F2FDBE1F80029C113 = {
 			isa = PBXGroup;
 			children = (
 				3853658A2FDBE1F90029C113 /* RockYourBodyApp */,
 				3853659C2FDBE1FC0029C113 /* RockYourBodyAppTests */,
 				385365A62FDBE1FC0029C113 /* RockYourBodyAppUITests */,
+				3820A1DE2FDDAB450092C6AF /* Frameworks */,
 				385365892FDBE1F90029C113 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -137,6 +152,8 @@
 			);
 			name = RockYourBodyApp;
 			packageProductDependencies = (
+				3820A1DC2FDDA9EF0092C6AF /* FirebaseCore */,
+				3820A1DF2FDDAB450092C6AF /* GoogleSignIn */,
 			);
 			productName = RockYourBodyApp;
 			productReference = 385365882FDBE1F90029C113 /* RockYourBodyApp.app */;
@@ -220,6 +237,10 @@
 			);
 			mainGroup = 3853657F2FDBE1F80029C113;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3820A1D42FDDA5E40092C6AF /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				3820A1DB2FDDA9EF0092C6AF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 385365892FDBE1F90029C113 /* Products */;
 			projectDirPath = "";
@@ -420,6 +441,7 @@
 				DEVELOPMENT_TEAM = AZ7GF3MD8T;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RockYourBodyApp/Info.plist;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "We need access to your health data to sync steps, calories, and vitals with your trainer.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "We need access to write or update fitness and weight metrics.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "We need access to motion sensors to accurately track your physical activity and cadence.";
@@ -461,6 +483,7 @@
 				DEVELOPMENT_TEAM = AZ7GF3MD8T;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RockYourBodyApp/Info.plist;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "We need access to your health data to sync steps, calories, and vitals with your trainer.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "We need access to write or update fitness and weight metrics.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "We need access to motion sensors to accurately track your physical activity and cadence.";
@@ -616,6 +639,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3820A1D42FDDA5E40092C6AF /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+		3820A1DB2FDDA9EF0092C6AF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.14.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3820A1DC2FDDA9EF0092C6AF /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3820A1DB2FDDA9EF0092C6AF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		3820A1DF2FDDAB450092C6AF /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3820A1D42FDDA5E40092C6AF /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 385365802FDBE1F80029C113 /* Project object */;
 }
