@@ -24,12 +24,14 @@ struct HomePageTrainerView: View {
     @State private var showBadgeSheet = false
     
     @State private var showLogoutAlert = false
+    @State private var showAIChat = false
     var filteredClients: [TrainerClientItem] {
         if searchText.isEmpty { return clients }
         return clients.filter { "\($0.firstName) \($0.lastName)".localizedCaseInsensitiveContains(searchText) }
     }
     
     var body: some View {
+        ZStack {
             VStack(spacing: 0) {
                 // Bara de căutare modernă
                 HStack {
@@ -177,7 +179,32 @@ struct HomePageTrainerView: View {
                     } message: {
                         Text("Are you sure you want to log out?")
                     }
-        
+            VStack {
+                            Spacer() // Împinge conținutul în jos
+                            HStack {
+                                Spacer() // Împinge conținutul la dreapta
+                                Button(action: {
+                                    showAIChat = true
+                                }) {
+                                    Image(systemName: "sparkles.tv.fill")
+                                        .font(.system(size: 30))
+                                        .foregroundColor(.white)
+                                        .frame(width: 65, height: 65)
+                                        .background(Color.orange) // Portocaliu pentru antrenor
+                                        .clipShape(Circle())
+                                        .shadow(color: .orange.opacity(0.4), radius: 10, x: 0, y: 5)
+                                }
+                                .padding(.trailing, 20)
+                                .padding(.bottom, 30)
+                                // 1. MUTĂ SHEET-UL AICI, DIRECT PE BUTON!
+                                .sheet(isPresented: $showAIChat) {
+                                    AIChatView()
+                                }
+                            }
+                        }
+                        
+                    }
+
     }
     
     private func loadClients() {

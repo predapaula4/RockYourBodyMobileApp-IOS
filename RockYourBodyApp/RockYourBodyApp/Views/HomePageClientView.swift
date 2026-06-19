@@ -9,6 +9,7 @@ struct HomePageClientView: View {
     @State private var dashboardData: ClientDashboardResponse? = nil
     @State private var isLoading = true
     @State private var trainerEmail: String = ""
+    @State private var showAIChat = false
     
     @State private var showLogoutAlert = false
     @ObservedObject private var hkManager = HealthKitManager.shared
@@ -85,10 +86,32 @@ struct HomePageClientView: View {
                     .padding(.bottom, 20)
                 }
             }
-        }
+            VStack {
+                            Spacer() // Împinge totul în jos
+                            HStack {
+                                Spacer() // Împinge totul la dreapta
+                                Button(action: {
+                                    showAIChat = true
+                                }) {
+                                    Image(systemName: "sparkles.tv.fill")
+                                        .font(.system(size: 30))
+                                        .foregroundColor(.white)
+                                        .frame(width: 65, height: 65)
+                                        .background(Color.orange)
+                                        .clipShape(Circle())
+                                        .shadow(color: .cyan.opacity(0.4), radius: 10, x: 0, y: 5)
+                                }
+                                .padding(.trailing, 20)
+                                .padding(.bottom, 30)
+                            }
+                        }
+                    }
         .navigationBarTitleDisplayMode(.inline) // FIX: Oprește recalcularea spațiului pentru titlu
         .navigationBarHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showAIChat) {
+                    AIChatView()
+                }
         .onAppear {
             loadDashboard()
             triggerUpdateAccess()

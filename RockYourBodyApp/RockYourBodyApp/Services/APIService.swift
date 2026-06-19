@@ -475,4 +475,37 @@ class APIService {
         let (data, _) = try await URLSession.shared.data(for: request)
         return try JSONDecoder().decode([ActivityReportDTO].self, from: data)
     }
+    
+    func askAIBot(message: String) async throws -> String {
+        guard let url = URL(string: "\(baseURL)/api/mobile/chat/ask") else {
+            throw URLError(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        // Dacă endpoint-ul e securizat, adaugă token-ul JWT aici:
+        if let token = UserDefaults.standard.string(forKey: "USER_TOKEN") {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let chatReq = AIChatRequest(message: message)
+        request.httpBody = try JSONEncoder().encode(chatReq)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        
+        let chatRes = try JSONDecoder().decode(AIChatResponse.self, from: data)
+        return chatRes.reply
+    }
+}
+struct AIChatRequest: Codable {
+    let message: String
+}
+
+struct AIChatResponse: Codable {
+    let reply: String
 }
