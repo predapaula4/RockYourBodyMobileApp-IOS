@@ -442,6 +442,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RockYourBodyApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Rock Your Body";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "We need access to your health data to sync steps, calories, and vitals with your trainer.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "We need access to write or update fitness and weight metrics.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "We need access to motion sensors to accurately track your physical activity and cadence.";
@@ -484,6 +485,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RockYourBodyApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Rock Your Body";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "We need access to your health data to sync steps, calories, and vitals with your trainer.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "We need access to write or update fitness and weight metrics.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "We need access to motion sensors to accurately track your physical activity and cadence.";

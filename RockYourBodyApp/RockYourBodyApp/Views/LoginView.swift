@@ -155,6 +155,7 @@ struct LoginView: View {
             do {
                 let response = try await APIService.shared.loginMobile(requestData: request)
                 UserDefaults.standard.set(email, forKey: "USER_EMAIL")
+                UserDefaults.standard.set(response.userType.lowercased(), forKey: "USER_TYPE")
                 
                 await MainActor.run {
                     isLoading = false
@@ -231,6 +232,7 @@ struct LoginView: View {
                         // Utilizatorul există -> Îl logăm direct
                         let userType = response["userType"] as? String ?? "client"
                         UserDefaults.standard.set(fetchedEmail, forKey: "USER_EMAIL")
+                        UserDefaults.standard.set(userType.lowercased(), forKey: "USER_TYPE") 
                         saveFirebaseToken(userEmail: fetchedEmail)
                         
                         if userType.lowercased() == "client" {

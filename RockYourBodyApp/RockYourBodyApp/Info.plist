@@ -15,5 +15,14 @@
 	</array>
 	<key>GIDClientID</key>
 	<string>1065768828965-h507f8ergvmr1397b5cpg1l9pavqdrld.apps.googleusercontent.com</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+            <string>com.rockyourbody.sync</string>
+        </array>
 </dict>
 </plist>

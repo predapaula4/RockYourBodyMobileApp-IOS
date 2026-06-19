@@ -17,6 +17,7 @@ struct WearableSyncView: View {
     @State private var isExporting = false
     @State private var exportMessage: String? = nil
     
+    
     var leanMass: Float { (hkManager.weight ?? 0) * (1.0 - ((hkManager.bodyFat ?? 0) / 100.0)) }
     var boneMass: Float { leanMass * 0.04 }
     
@@ -46,94 +47,135 @@ struct WearableSyncView: View {
                     .opacity(0)
                 }
                 .padding()
+                
                 // --- CONȚINUTUL PAGINII ---
                 ScrollView {
                     VStack(spacing: 16) {
                         
-                        // Card Pași & Calorii
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("\(hkManager.todaySteps) steps").font(.system(size: 32, weight: .bold)).foregroundColor(Color(hex: "#50F4B5"))
-                            
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text("Total burned (BMR+Active)").font(.caption).foregroundColor(.gray)
-                                    Text("\(Int(hkManager.totalCalories)) kcal").font(.headline).foregroundColor(Color(hex: "#FF5252"))
-                                }.frame(maxWidth: .infinity, alignment: .leading)
+                        // Card Pași & Calorii -> Navighează la StepsChartView
+                        NavigationLink(destination: StepsChartView()) {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("\(hkManager.todaySteps) steps").font(.system(size: 32, weight: .bold)).foregroundColor(Color(hex: "#50F4B5"))
                                 
-                                VStack(alignment: .leading) {
-                                    Text("Active Calories").font(.caption).foregroundColor(.gray)
-                                    Text("\(Int(hkManager.activeCalories)) kcal").font(.headline).foregroundColor(Color(hex: "#F09819"))
-                                }.frame(maxWidth: .infinity, alignment: .leading)
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text("Total burned (BMR+Active)").font(.caption).foregroundColor(.gray)
+                                        Text("\(Int(hkManager.totalCalories)) kcal").font(.headline).foregroundColor(Color(hex: "#FF5252"))
+                                    }.frame(maxWidth: .infinity, alignment: .leading)
+                                    
+                                    VStack(alignment: .leading) {
+                                        Text("Active Calories").font(.caption).foregroundColor(.gray)
+                                        Text("\(Int(hkManager.activeCalories)) kcal").font(.headline).foregroundColor(Color(hex: "#F09819"))
+                                    }.frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                
+                                ProgressView(value: min(Double(hkManager.todaySteps), 6000), total: 6000)
+                                    .tint(Color(hex: "#50F4A1"))
                             }
-                            
-                            ProgressView(value: min(Double(hkManager.todaySteps), 6000), total: 6000)
-                                .tint(Color(hex: "#50F4A1"))
+                            .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
                         }
-                        .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
+                        .buttonStyle(PlainButtonStyle())
                         
                         // Card Smart Scale (Greutate, Grăsime)
-                        VStack(spacing: 16) {
-                            HStack {
-                                ScaleMetricView(title: "Weight", value: hkManager.weight != nil ? String(format: "%.1f kg", hkManager.weight!) : "-- kg")
-                                ScaleMetricView(title: "Body Fat", value: hkManager.bodyFat != nil ? String(format: "%.1f %%", hkManager.bodyFat!) : "-- %")
+                        NavigationLink(destination: BodyCompositionView()) {
+                            VStack(spacing: 16) {
+                                HStack {
+                                    ScaleMetricView(title: "Weight", value: hkManager.weight != nil ? String(format: "%.1f kg", hkManager.weight!) : "-- kg")
+                                    ScaleMetricView(title: "Body Fat", value: hkManager.bodyFat != nil ? String(format: "%.1f %%", hkManager.bodyFat!) : "-- %")
+                                }
+                                HStack {
+                                    ScaleMetricView(title: "Lean Mass", value: hkManager.weight != nil ? String(format: "%.1f kg", leanMass) : "-- kg")
+                                    ScaleMetricView(title: "Bone Mass", value: hkManager.weight != nil ? String(format: "%.1f kg", boneMass) : "-- kg")
+                                }
                             }
-                            HStack {
-                                ScaleMetricView(title: "Lean Mass", value: hkManager.weight != nil ? String(format: "%.1f kg", leanMass) : "-- kg")
-                                ScaleMetricView(title: "Bone Mass", value: hkManager.weight != nil ? String(format: "%.1f kg", boneMass) : "-- kg")
-                            }
+                            .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
                         }
-                        .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
+                        .buttonStyle(PlainButtonStyle())
                         
                         // Card Vitals
                         VStack(spacing: 16) {
                             HStack {
-                                ScaleMetricView(title: "Blood Oxygen", value: hkManager.oxygenSaturation != nil ? String(format: "%.1f %%", hkManager.oxygenSaturation!) : "-- %")
-                                ScaleMetricView(title: "VO2 Max", value: hkManager.vo2Max != nil ? String(format: "%.1f", hkManager.vo2Max!) : "--")
+                                NavigationLink(destination: OxygenSaturationView()) {
+                                    ScaleMetricView(title: "Blood Oxygen", value: hkManager.oxygenSaturation != nil ? String(format: "%.1f %%", hkManager.oxygenSaturation!) : "-- %")
+                                }.buttonStyle(PlainButtonStyle())
+                                
+                                NavigationLink(destination: AdvancedChartView(metricType: .vo2Max)) {
+                                    ScaleMetricView(title: "VO2 Max", value: hkManager.vo2Max != nil ? String(format: "%.1f", hkManager.vo2Max!) : "--")
+                                }.buttonStyle(PlainButtonStyle())
                             }
                             HStack {
-                                ScaleMetricView(title: "Resting HR", value: hkManager.restingHeartRate > 0 ? "\(Int(hkManager.restingHeartRate)) bpm" : "-- bpm")
-                                ScaleMetricView(title: "Blood Pressure", value: (hkManager.systolicBP != nil && hkManager.diastolicBP != nil) ? "\(Int(hkManager.systolicBP!))/\(Int(hkManager.diastolicBP!))" : "--/--")
+                                NavigationLink(destination: HeartRateView()) { // Îl trimitem la istoricul de puls
+                                    ScaleMetricView(title: "Resting HR", value: hkManager.restingHeartRate > 0 ? "\(Int(hkManager.restingHeartRate)) bpm" : "-- bpm")
+                                }.buttonStyle(PlainButtonStyle())
+                                
+                                NavigationLink(destination: BloodPressureView()) {
+                                    ScaleMetricView(title: "Blood Pressure", value: (hkManager.systolicBP != nil && hkManager.diastolicBP != nil) ? "\(Int(hkManager.systolicBP!))/\(Int(hkManager.diastolicBP!))" : "--/--")
+                                }.buttonStyle(PlainButtonStyle())
                             }
                         }
                         .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
                         
-                        // Grid Somn / Heart Rate
+                        // Grid Somn / Heart Rate -> Navighează la detaliile aferente
                         HStack(spacing: 8) {
-                            VStack(alignment: .leading) {
-                                Text("Sleep").font(.caption).foregroundColor(.gray)
-                                Text("\(hkManager.sleepMinutes / 60)h \(hkManager.sleepMinutes % 60)m").font(.title3).bold().foregroundColor(Color(hex: "#8C66FF"))
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading).padding().background(Color(hex: "#1E1E1E")).cornerRadius(20)
+                            NavigationLink(destination: SleepDetailView()) {
+                                VStack(alignment: .leading) {
+                                    Text("Sleep").font(.caption).foregroundColor(.gray)
+                                    Text("\(hkManager.sleepMinutes / 60)h \(hkManager.sleepMinutes % 60)m").font(.title3).bold().foregroundColor(Color(hex: "#8C66FF"))
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading).padding().background(Color(hex: "#1E1E1E")).cornerRadius(20)
+                            }.buttonStyle(PlainButtonStyle())
                             
-                            VStack(alignment: .leading) {
-                                Text("Avg Heart Rate").font(.caption).foregroundColor(.gray)
-                                Text(hkManager.avgHeartRate > 0 ? "\(Int(hkManager.avgHeartRate)) bpm" : "-- bpm").font(.title3).bold().foregroundColor(Color(hex: "#FF5252"))
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading).padding().background(Color(hex: "#1E1E1E")).cornerRadius(20)
+                            NavigationLink(destination: HeartRateView()) {
+                                VStack(alignment: .leading) {
+                                    Text("Avg Heart Rate").font(.caption).foregroundColor(.gray)
+                                    Text(hkManager.avgHeartRate > 0 ? "\(Int(hkManager.avgHeartRate)) bpm" : "-- bpm").font(.title3).bold().foregroundColor(Color(hex: "#FF5252"))
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading).padding().background(Color(hex: "#1E1E1E")).cornerRadius(20)
+                            }.buttonStyle(PlainButtonStyle())
                         }.padding(.horizontal)
                         
                         // Card Performance
                         VStack(spacing: 16) {
                             HStack {
-                                PerformanceMetricView(title: "Distance", value: String(format: "%.2f km", hkManager.distanceMeters / 1000.0))
-                                PerformanceMetricView(title: "Floors", value: "\(Int(hkManager.floorsClimbed))")
+                                NavigationLink(destination: PerformanceChartView(metricType: .distance)) {
+                                    PerformanceMetricView(title: "Distance", value: String(format: "%.2f km", hkManager.distanceMeters / 1000.0))
+                                }
+                                
+                                NavigationLink(destination: PerformanceChartView(metricType: .floors)) {
+                                    PerformanceMetricView(title: "Floors", value: "\(Int(hkManager.floorsClimbed))")
+                                }
                             }
                             HStack {
-                                PerformanceMetricView(title: "Active Mins", value: "\(hkManager.activityIntensityMinutes) min")
-                                PerformanceMetricView(title: "Water", value: "\(hkManager.waterMl) ml")
+                                NavigationLink(destination: PerformanceChartView(metricType: .intensity)) {
+                                    PerformanceMetricView(title: "Active Mins", value: "\(hkManager.activityIntensityMinutes) min")
+                                }
+                                
+                                // Navighează la HydrationView
+                                NavigationLink(destination: HydrationView()) {
+                                    PerformanceMetricView(title: "Water", value: "\(hkManager.waterMl) ml")
+                                }
                             }
                         }
                         .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
-                        
+
                         // Card Advanced Performance
                         VStack(spacing: 16) {
                             HStack {
-                                PerformanceMetricView(title: "Avg Speed", value: hkManager.avgSpeed != nil ? String(format: "%.1f m/s", hkManager.avgSpeed!) : "-- m/s")
-                                PerformanceMetricView(title: "Step Cadence", value: hkManager.avgCadence != nil ? "\(Int(hkManager.avgCadence!)) rpm" : "-- rpm")
+                                NavigationLink(destination: PerformanceChartView(metricType: .speed)) {
+                                    PerformanceMetricView(title: "Avg Speed", value: hkManager.avgSpeed != nil ? String(format: "%.1f m/s", hkManager.avgSpeed!) : "-- m/s")
+                                }
+                                NavigationLink(destination: PerformanceChartView(metricType: .cadence)) {
+                                    PerformanceMetricView(title: "Step Cadence", value: hkManager.avgCadence != nil ? "\(Int(hkManager.avgCadence!)) rpm" : "-- rpm")
+                                }
                             }
                             HStack {
-                                PerformanceMetricView(title: "Elevation", value: "-- m")
-                                PerformanceMetricView(title: "Exercises", value: "\(hkManager.exerciseSessionsCount) sessions")
+                                NavigationLink(destination: PerformanceChartView(metricType: .elevation)) {
+                                    // AM MODIFICAT AICI: Înlocuim "-- m" cu calculul real pe baza etajelor (x 3.0 metri)
+                                    PerformanceMetricView(title: "Elevation", value: String(format: "%.0f m", hkManager.floorsClimbed * 3.0))
+                                }
+                                NavigationLink(destination: AdvancedChartView(metricType: .exercise)) {
+                                    PerformanceMetricView(title: "Exercises", value: "\(hkManager.exerciseSessionsCount) sessions")
+                                }.buttonStyle(PlainButtonStyle())
                             }
                         }
                         .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
@@ -141,12 +183,16 @@ struct WearableSyncView: View {
                         // Card Cycling & Power
                         VStack(spacing: 16) {
                             HStack {
-                                PerformanceMetricView(title: "Power", value: hkManager.powerWatts != nil ? "\(Int(hkManager.powerWatts!)) W" : "-- W")
-                                PerformanceMetricView(title: "Cycle Cadence", value: hkManager.avgCadence != nil ? "\(Int(hkManager.avgCadence!)) rpm" : "-- rpm")
+                                NavigationLink(destination: AdvancedChartView(metricType: .power)) {
+                                    PerformanceMetricView(title: "Power", value: hkManager.powerWatts != nil ? "\(Int(hkManager.powerWatts!)) W" : "-- W")
+                                }
+                                NavigationLink(destination: AdvancedChartView(metricType: .cyclingCadence)) {
+                                    PerformanceMetricView(title: "Cycle Cadence", value: hkManager.avgCadence != nil ? "\(Int(hkManager.avgCadence!)) rpm" : "-- rpm") // NOTĂ: Va trebui mapată cadența de cycling corect din HKManager dacă vrei separat de pași
+                                }
                             }
                         }
                         .padding().background(Color(hex: "#1E1E1E")).cornerRadius(24).padding(.horizontal)
-                        
+                        .buttonStyle(PlainButtonStyle())
                         // ---- BUTOANE SYNC & PDF EXPORT ----
                         VStack(spacing: 12) {
                             if let msg = syncMessage {
@@ -185,10 +231,10 @@ struct WearableSyncView: View {
                     .padding(.top, 16)
                 }
             }
-        } // Aici se închide VStack-ul principal
+        } // Aici se închide ZStack-ul principal
         .navigationBarTitleDisplayMode(.inline) // FIX: Oprește "strângerea"
-                .navigationBarHidden(true)
-                .toolbar(.hidden, for: .navigationBar) // Oprim complet iOS-ul din a anima vreo bară nativă
+        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar) // Oprim complet iOS-ul din a anima vreo bară nativă
         .onAppear {
             hkManager.requestAuthorization { authorized in
                 if authorized { hkManager.fetchAllData() }

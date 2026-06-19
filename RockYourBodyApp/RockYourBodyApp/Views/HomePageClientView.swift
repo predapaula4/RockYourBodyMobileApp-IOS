@@ -1,12 +1,17 @@
 import SwiftUI
+import GoogleSignIn
 
 struct HomePageClientView: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var clientEmail = UserDefaults.standard.string(forKey: "USER_EMAIL") ?? ""
+//    @Environment(\.dismiss) private var dismiss
+//    @State private var clientEmail = UserDefaults.standard.string(forKey: "USER_EMAIL") ?? ""
+    @AppStorage("USER_EMAIL") private var clientEmail: String = ""
+    @AppStorage("USER_TYPE") private var userType: String = ""
     @State private var dashboardData: ClientDashboardResponse? = nil
     @State private var isLoading = true
     @State private var trainerEmail: String = ""
     
+    @State private var showLogoutAlert = false
+    @ObservedObject private var hkManager = HealthKitManager.shared
     var body: some View {
         ZStack {
             Color(hex: "#121212").ignoresSafeArea()
@@ -17,7 +22,8 @@ struct HomePageClientView: View {
                 } else if let data = dashboardData {
                     VStack(spacing: 20) {
                         HStack {
-                                                    Button(action: logoutUser) {
+                                                
+                                                    Button(action: { showLogoutAlert = true }) {
                                                         HStack(spacing: 4) {
                                                             Image(systemName: "rectangle.portrait.and.arrow.right")
                                                             Text("Logout")
@@ -88,6 +94,23 @@ struct HomePageClientView: View {
             triggerUpdateAccess()
             NotificationManager.shared.requestPermission()
             NotificationManager.shared.scheduleWaterReminder()
+            hkManager.requestAuthorization { authorized in
+                    if authorized {
+                        hkManager.fetchAllData()
+                    
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                            performBackgroundSync()
+                        }
+                    }
+                }
+        }
+        .alert("Log Out", isPresented: $showLogoutAlert) {
+            Button("Cancel", role: .cancel) { } // Closes the alert without doing anything
+            Button("Log Out", role: .destructive) {
+                logoutUser() // Calls your function only if the user confirms
+            }
+        } message: {
+            Text("Are you sure you want to log out?")
         }
     }
     
@@ -106,12 +129,44 @@ struct HomePageClientView: View {
         Task { try? await APIService.shared.updateLastAccess(requestData: request) }
     }
     private func logoutUser() {
-            // Ștergem datele salvate în sesiune
-            UserDefaults.standard.removeObject(forKey: "USER_EMAIL")
-            
-            // Ne întoarcem forțat la LoginView
-            dismiss()
+        clientEmail = ""
+            userType = ""
+            GIDSignIn.sharedInstance.signOut()
         }
+    
+    // Adaugă funcția asta la finalul structurii HomePageClientView, sub funcția logoutUser()
+    private func performBackgroundSync() {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        // Construim request-ul cu datele din hkManager
+        let request = DailyActivitySyncRequest(
+            email: clientEmail, date: formatter.string(from: Date()), steps: hkManager.todaySteps,
+            caloriesBurned: hkManager.totalCalories, activeCalories: hkManager.activeCalories,
+            distanceMeters: hkManager.distanceMeters, floorsClimbed: hkManager.floorsClimbed,
+            sleepMinutes: hkManager.sleepMinutes, avgHeartRate: hkManager.avgHeartRate,
+            maxHeartRate: hkManager.maxHeartRate, minHeartRate: hkManager.minHeartRate,
+            latestHeartRate: hkManager.latestHeartRate, restingHeartRate: hkManager.restingHeartRate,
+            waterMl: hkManager.waterMl, bodyFat: hkManager.bodyFat, weight: hkManager.weight,
+            oxygenSaturation: hkManager.oxygenSaturation, systolicBP: hkManager.systolicBP,
+            diastolicBP: hkManager.diastolicBP, activityIntensityMinutes: hkManager.activityIntensityMinutes,
+            avgSpeed: hkManager.avgSpeed, avgCadence: hkManager.avgCadence, vo2Max: hkManager.vo2Max,
+            elevationGained: 0, wheelchairPushes: nil, powerWatts: hkManager.powerWatts,
+            exerciseSessionsCount: hkManager.exerciseSessionsCount, totalSleepMinutes: hkManager.sleepMinutes,
+            deepSleepMin: hkManager.deepSleepMin, remSleepMin: hkManager.remSleepMin,
+            lightSleepMin: hkManager.lightSleepMin, awakeMin: hkManager.awakeMin
+        )
+        
+        // Trimitem datele către server folosind APIService[cite: 2]
+        Task {
+            do {
+                try await APIService.shared.syncWearableData(requestData: request)
+                print("Sincronizare HealthKit automată reușită!")
+            } catch {
+                print("Eroare la sincronizarea automată: \(error)")
+            }
+        }
+    }
 }
 
 struct ClientMenuButton: View {

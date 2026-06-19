@@ -1,10 +1,14 @@
 import SwiftUI
+import GoogleSignIn
 
 struct HomePageTrainerView: View {
     // 1. ADĂUGAT: Variabila de environment pentru a ne putea întoarce la Login
-    @Environment(\.dismiss) private var dismiss
-    
-    @State private var trainerEmail = UserDefaults.standard.string(forKey: "USER_EMAIL") ?? ""
+//    @Environment(\.dismiss) private var dismiss
+//    
+//    @State private var trainerEmail = UserDefaults.standard.string(forKey: "USER_EMAIL") ?? ""
+    @AppStorage("USER_EMAIL") private var trainerEmail: String = ""
+    @AppStorage("USER_TYPE") private var userType: String = ""
+    @State private var dashboardData: ClientDashboardResponse? = nil
     @State private var trainerProfileImageBase64: String? = nil
     @State private var clients: [TrainerClientItem] = []
     @State private var searchText = ""
@@ -19,6 +23,7 @@ struct HomePageTrainerView: View {
     @State private var availableBadges: [BadgeResponse] = []
     @State private var showBadgeSheet = false
     
+    @State private var showLogoutAlert = false
     var filteredClients: [TrainerClientItem] {
         if searchText.isEmpty { return clients }
         return clients.filter { "\($0.firstName) \($0.lastName)".localizedCaseInsensitiveContains(searchText) }
@@ -114,14 +119,14 @@ struct HomePageTrainerView: View {
             .toolbar {
                 // 3. ADĂUGAT: Butonul de Logout plasat în partea stângă (Leading)
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: logoutUser) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                            Text("Logout")
-                        }
-                        .foregroundColor(.red)
-                    }
-                }
+                                Button(action: { showLogoutAlert = true }) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                                        Text("Logout")
+                                    }
+                                    .foregroundColor(.red)
+                                }
+                            }
                 
                 // Poza de profil rămasă în partea dreaptă (Trailing)
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -164,6 +169,14 @@ struct HomePageTrainerView: View {
                     isPresented: $showBadgeSheet
                 )
             }
+            .alert("Log Out", isPresented: $showLogoutAlert) {
+                        Button("Cancel", role: .cancel) { }
+                        Button("Log Out", role: .destructive) {
+                            logoutUser()
+                        }
+                    } message: {
+                        Text("Are you sure you want to log out?")
+                    }
         
     }
     
@@ -215,13 +228,10 @@ struct HomePageTrainerView: View {
     }
     
     private func logoutUser() {
-        // Ștergem datele salvate în sesiune
-        UserDefaults.standard.removeObject(forKey: "USER_EMAIL")
-        // Dacă ai salvat și alte tokenuri, șterge-le și pe acelea aici
-        
-        // Ne întoarcem forțat la LoginView
-        dismiss()
-    }
+        trainerEmail = ""
+        userType = ""
+         GIDSignIn.sharedInstance.signOut()
+   }
 }
 
 // Sub-componentă pentru butoane stil iOS Settings
