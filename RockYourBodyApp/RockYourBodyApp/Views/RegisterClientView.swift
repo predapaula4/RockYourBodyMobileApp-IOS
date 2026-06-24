@@ -12,7 +12,7 @@ struct RegisterClientView: View {
     @State private var height = ""
     @State private var age = "" // Format: yyyy-MM-dd
     @State private var gender = "M"
-    @State private var activity = "Sedentary"
+    @State private var activity = "1-2 days/week"
     @State private var codTrainer = ""
     @State private var countryCode = "+40"
     @State private var phoneNumber = ""
@@ -105,7 +105,7 @@ struct RegisterClientView: View {
                 dismiss()
             } catch {
                 isLoading = false
-                errorMessage = "Registration failed. Please check your data."
+                errorMessage = error.localizedDescription
             }
         }
     }

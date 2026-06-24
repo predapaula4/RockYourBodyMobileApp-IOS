@@ -117,8 +117,26 @@ class APIService {
 
     func registerClient(client: ClientFormDto) async throws {
         let body = try JSONEncoder().encode(client)
-        let request = try createRequest(endpoint: "/api/mobile/auth/register/client", method: "POST", body: body)
-        let _ = try await URLSession.shared.data(for: request)
+        var request = try createRequest(endpoint: "/api/mobile/auth/register/client", method: "POST", body: body)
+        
+        // Asigură-te că trimiți antetul corect pentru @RequestBody
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        // Verificăm dacă statusul e între 200 și 299 (Succes)
+        if !(200...299).contains(httpResponse.statusCode) {
+            // Dacă e 400, backend-ul trimite mesajul (ex: "Password security requirements not met.")
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Eroare necunoscută de la server"
+            print("Backend Error: \(errorMessage)") // Îți va apărea în consola Xcode de ce a picat exact
+            
+            // Aruncăm eroarea ca să o prindă blocul do-catch din UI și să afișeze mesajul
+            throw NSError(domain: "AppError", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: errorMessage])
+        }
     }
 
     func registerTrainer(trainer: TrainerFormDto) async throws {
