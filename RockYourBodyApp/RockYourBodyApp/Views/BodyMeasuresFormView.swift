@@ -82,7 +82,7 @@ struct BodyMeasuresFormView: View {
                 Button(action: { dismiss() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text("Back")
+                        
                     }
                     .foregroundColor(.cyan)
                 }

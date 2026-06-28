@@ -49,9 +49,9 @@ struct ExerciseExamplesView: View {
                                 // NOTĂ: Pune aici proprietățile tale reale din structura ExerciseExampleItem!
                                 let imageUrls = [
                                     ex.imageUrlStartPosition,
-                                    ex.imageUrlStartPosition,
                                     ex.imageUrlIntermediatePosition1,
-                                    ex.imageUrlIntermediatePosition2
+                                    ex.imageUrlIntermediatePosition2,
+                                    ex.imageUrlMuscularGroup,
                                 ].compactMap { $0 } // compactMap elimină automat variabilele nule/goale
                                 
                                 if !imageUrls.isEmpty {

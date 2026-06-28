@@ -9,7 +9,7 @@ struct CustomHeader: View {
             Button(action: { dismiss() }) {
                 HStack(spacing: 4) {
                     Image(systemName: "chevron.left")
-                    Text("Back")
+                    
                 }
                 .foregroundColor(.cyan)
             }
@@ -21,7 +21,7 @@ struct CustomHeader: View {
             // Spacer invizibil pentru a centra perfect titlul
             HStack(spacing: 4) {
                 Image(systemName: "chevron.left")
-                Text("Back")
+                
             }
             .opacity(0)
         }

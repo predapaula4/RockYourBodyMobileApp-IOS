@@ -128,7 +128,6 @@ class HealthKitManager: ObservableObject {
                 return completion(0.0)
             }
             
-            // Aici rezolvăm eroarea: transformăm data în predicate înainte să o trimitem către HealthKit
             let predicate = createPredicate(for: date)
             
             let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, result, _ in

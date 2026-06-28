@@ -22,7 +22,9 @@ struct ExerciseMenuView: View {
             if isLoading {
                 ProgressView().padding()
             } else if dailyExercises.isEmpty {
-                Text("No workouts scheduled for this day.").foregroundColor(.gray).padding()
+                Text("Rest day! Your muscles are busy growing. Enjoy the couch! 🛋️✨")
+                    .foregroundColor(.orange)
+                    .padding()
             } else {
                 List(dailyExercises, id: \.idExercise) { exercise in
                     VStack(alignment: .leading) {
