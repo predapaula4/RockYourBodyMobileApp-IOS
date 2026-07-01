@@ -179,7 +179,7 @@ struct TrainerFormDto: Codable {
     let profileImage: Data?
 }
 
-struct ClientDashboardResponse: Codable {
+struct ClientDashboardResponse: Codable, Equatable {
     let firstName: String
     let kcal: Float
     let weight: Float
@@ -189,7 +189,7 @@ struct ClientDashboardResponse: Codable {
     let streak: Int
     let badges: [BadgeResponse]
 }
-struct BadgeResponse: Codable {
+struct BadgeResponse: Codable, Equatable {
     let code: String
     let name: String
     let description: String

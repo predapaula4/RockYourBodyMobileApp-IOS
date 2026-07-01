@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct WearableSyncView: View {
+    @Binding var isPresented: Bool
     @Environment(\.dismiss) var dismiss
     let clientEmail: String
     let trainerEmail: String
@@ -22,15 +23,18 @@ struct WearableSyncView: View {
     var boneMass: Float { leanMass * 0.04 }
     
     var body: some View {
+        NavigationView {
         ZStack {
            Color(hex: "#121212").ignoresSafeArea()
             VStack(spacing: 0) {
                 // --- HEADER CUSTOM (Așa rezolvăm săritul ecranului) ---
                 HStack {
-                    Button(action: { dismiss() }) {
+                    Button(action: { 
+                        withAnimation(.spring()) { isPresented = false }
+                    }) {
                         HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                            
+                            Image(systemName: "chevron.down")
+                            Text("Close")
                         }
                         .foregroundColor(.cyan)
                     }
@@ -38,15 +42,11 @@ struct WearableSyncView: View {
                     Text("Wearable Activity")
                         .font(.headline)
                         .foregroundColor(.white)
+                        .padding(.trailing, 60)
                     Spacer()
-                    // Placeholder invizibil pentru a centra perfect titlul
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        
-                    }
-                    .opacity(0)
                 }
                 .padding()
+                .background(Color(hex: "#1E1E1E").ignoresSafeArea(edges: .top))
                 
                 // --- CONȚINUTUL PAGINII ---
                 ScrollView {
@@ -232,9 +232,12 @@ struct WearableSyncView: View {
                 }
             }
         } // Aici se închide ZStack-ul principal
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline) // FIX: Oprește "strângerea"
         .navigationBarHidden(true)
         .toolbar(.hidden, for: .navigationBar) // Oprim complet iOS-ul din a anima vreo bară nativă
+        } // Aici se închide NavigationView
+        .navigationViewStyle(.stack)
         .onAppear {
             hkManager.requestAuthorization { authorized in
                 if authorized { hkManager.fetchAllData() }

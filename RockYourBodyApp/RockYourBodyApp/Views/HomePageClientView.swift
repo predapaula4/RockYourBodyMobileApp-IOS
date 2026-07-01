@@ -10,31 +10,33 @@ struct HomePageClientView: View {
     @State private var isLoading = true
     @State private var trainerEmail: String = ""
     @State private var showAIChat = false
+    @State private var showWearableSync = false
     
     @State private var showLogoutAlert = false
-    @ObservedObject private var hkManager = HealthKitManager.shared
+    private let hkManager = HealthKitManager.shared
     var body: some View {
+        ZStack {
         ZStack {
             Color(hex: "#121212").ignoresSafeArea()
             
             ScrollView {
-                if isLoading {
-                    ProgressView("Loading...").padding(.top, 100)
-                } else if let data = dashboardData {
-                    VStack(spacing: 20) {
+                VStack(spacing: 20) {
+                    if isLoading {
+                        ProgressView("Loading...").padding(.top, 100)
+                    } else if let data = dashboardData {
                         HStack {
-                                                
-                                                    Button(action: { showLogoutAlert = true }) {
-                                                        HStack(spacing: 4) {
-                                                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                                                            Text("Logout")
-                                                        }
-                                                        .foregroundColor(.red)
-                                                    }
-                                                    Spacer()
-                                                }
-                                                .padding(.horizontal)
-                                                .padding(.top, 10)
+                            
+                            Button(action: { showLogoutAlert = true }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                                    Text("Logout")
+                                }
+                                .foregroundColor(.red)
+                            }
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 10)
                         // 1. Header
                         HStack {
                             VStack(alignment: .leading) {
@@ -60,7 +62,11 @@ struct HomePageClientView: View {
                         }.padding(.horizontal)
                         
                         // 3. Wearable Sync
-                        NavigationLink(destination: WearableSyncView(clientEmail: clientEmail, trainerEmail: trainerEmail)) {
+                        Button(action: { 
+                            withAnimation(.spring()) {
+                                showWearableSync = true 
+                            }
+                        }) {
                             HStack {
                                 Image(systemName: "applewatch.radiowaves.left.and.right")
                                 Text("Wearable Activity & Sync")
@@ -82,10 +88,11 @@ struct HomePageClientView: View {
                             NavigationLink(destination: ExerciseMenuView(clientEmail: clientEmail)) { ClientMenuButton(title: "Workout Plan & Guidelines", icon: "dumbbell.fill") }
                             NavigationLink(destination: ChatOptionsView(clientEmail: clientEmail)) { ClientMenuButton(title: "Contact Trainer", icon: "message.fill") }
                         }.padding(.horizontal)
+                        .padding(.bottom, 20)
                     }
-                    .padding(.bottom, 20)
                 }
             }
+            .animation(.easeInOut(duration: 0.3), value: dashboardData)
             VStack {
                             Spacer() // Împinge totul în jos
                             HStack {
@@ -103,29 +110,42 @@ struct HomePageClientView: View {
                                 }
                                 .padding(.trailing, 20)
                                 .padding(.bottom, 30)
-                            }
-                        }
-                    }
+                            } // HStack
+                        } // VStack
+        } // ZStack closed
+        .navigationTitle("") // Anchor for the navigation transition engine
         .navigationBarTitleDisplayMode(.inline) // FIX: Oprește recalcularea spațiului pentru titlu
         .navigationBarHidden(true)
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $showAIChat) {
-                    AIChatView()
-                }
+        
+        // Custom Full Screen Slide-Up Modal
+        if showWearableSync {
+            WearableSyncView(isPresented: $showWearableSync, clientEmail: clientEmail, trainerEmail: trainerEmail)
+                .transition(.move(edge: .bottom))
+                .zIndex(100)
+        }
+        } // Aici se închide ZStack-ul mare pe care trebuie să-l creăm
+        .fullScreenCover(isPresented: $showAIChat) {
+            AIChatView()
+        }
         .onAppear {
-            loadDashboard()
-            triggerUpdateAccess()
-            NotificationManager.shared.requestPermission()
-            NotificationManager.shared.scheduleWaterReminder()
-            hkManager.requestAuthorization { authorized in
+            if dashboardData == nil {
+                loadDashboard()
+                triggerUpdateAccess()
+                NotificationManager.shared.requestPermission()
+                NotificationManager.shared.scheduleWaterReminder()
+                hkManager.requestAuthorization { authorized in
                     if authorized {
                         hkManager.fetchAllData()
-                    
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                             performBackgroundSync()
                         }
                     }
                 }
+            } else {
+                // If we are returning to the page and already have data, we do NOT re-fetch.
+                // This prevents state updates from interfering with the NavigationStack pop animation!
+            }
         }
         .alert("Log Out", isPresented: $showLogoutAlert) {
             Button("Cancel", role: .cancel) { } // Closes the alert without doing anything
